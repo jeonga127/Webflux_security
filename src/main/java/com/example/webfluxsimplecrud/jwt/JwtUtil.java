@@ -1,7 +1,8 @@
 package com.example.webfluxsimplecrud.jwt;
 
+import com.example.webfluxsimplecrud.domain.RefreshToken;
 import com.example.webfluxsimplecrud.dto.TokenDto;
-import com.example.webfluxsimplecrud.security.UserDetailsServiceImpl;
+import com.example.webfluxsimplecrud.repository.RefreshTokenRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.security.Key;
 import java.time.Instant;
@@ -24,10 +26,10 @@ public class JwtUtil {
     public static final String REFRESH_TOKEN = "Refresh_Token";
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private static final Date ACCESS_TIME = Date.from(Instant.now().plus(1, ChronoUnit.HOURS));
-    public static final Date REFRESH_TIME = Date.from(Instant.now().plus(7, ChronoUnit.DAYS));
+    private static final Date ACCESS_TIME = Date.from(Instant.now().plus(1, ChronoUnit.MINUTES));
+    public static final Date REFRESH_TIME = Date.from(Instant.now().plus(3, ChronoUnit.MINUTES));
     private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-    private final UserDetailsServiceImpl userDetailsService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${jwt.secret.key}")
     private String SECURITY_KEY;
@@ -57,10 +59,10 @@ public class JwtUtil {
                         .compact();
     }
 
-    public Boolean validateToken(String token) {
+    public Mono<Boolean> validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-            return true;
+            return Mono.just(true);
         } catch (SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
         } catch (ExpiredJwtException e) {
@@ -70,7 +72,30 @@ public class JwtUtil {
         } catch (IllegalArgumentException e) {
             log.info("JWT claims is empty, 잘못된 JWT 토큰 입니다.");
         }
-        return false;
+        return Mono.just(false);
+    }
+
+    public Mono<Boolean> refreshTokenValidation(String token) {
+        // 토큰 검증
+
+        return validateToken(token)
+                .flatMap((valid) -> {
+                    if (!valid)
+                        return Mono.just(false);
+                    else {
+                        return refreshTokenRepository
+                                .existsByUserId(getUserInfoFromToken(token))
+                                .flatMap((exists) -> {
+                                    if (exists) {
+                                        return refreshTokenRepository
+                                                .findByUserId(getUserInfoFromToken(token))
+                                                .map(refreshToken -> {
+                                                    return token.equals(refreshToken.getRefreshToken().substring(7));
+                                                });
+                                    } else return Mono.just(false);
+                                });
+                    }
+                });
     }
 
     public String getUserInfoFromToken(String token) {

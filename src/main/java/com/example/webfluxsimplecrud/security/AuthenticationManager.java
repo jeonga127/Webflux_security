@@ -23,15 +23,17 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
         String authToken = authentication.getCredentials().toString();
         String userId = jwtUtil.getUserInfoFromToken(authToken);
 
-        if (jwtUtil.validateToken(authToken)) {
-            return userDetailsService.findByUsername(userId)
-                    .map(userDetails -> {
-                        return new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities());
-                    });
-        }
-        return Mono.empty();
+        return jwtUtil.validateToken(authToken)
+                .flatMap((valid)->{
+                   if(valid){
+                       return userDetailsService.findByUsername(userId)
+                               .map(userDetails -> {
+                                   return new UsernamePasswordAuthenticationToken(
+                                           userDetails,
+                                           null,
+                                           userDetails.getAuthorities());});
+                   }
+                   else return null;
+                });
     }
 }
