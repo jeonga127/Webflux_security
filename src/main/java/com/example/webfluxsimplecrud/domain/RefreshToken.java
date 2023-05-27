@@ -14,9 +14,9 @@ public class RefreshToken {
     private String refreshToken;
     private String userId;
 
-    public RefreshToken(String refreshToken, Member member){
+    public RefreshToken(String refreshToken, String userId){
         this.refreshToken = refreshToken;
-        this.userId = member.getUserId();
+        this.userId = userId;
     }
 
     public RefreshToken updateToken(String token){

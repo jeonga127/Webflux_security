@@ -32,9 +32,9 @@ public class MemberService {
                     if (exists)
                         return Mono.error(new IllegalArgumentException("중복된 아이디입니다."));
                     else {
-                        MemberRoleEnum role = signupRequestDto.getMemberRole().equals("ADMIN") ? MemberRoleEnum.ADMIN : MemberRoleEnum.USER;
-                        String password = passwordEncoder.encode(signupRequestDto.getPassword());
-                        return memberRepository.save(new Member(signupRequestDto, password, role))
+                        return memberRepository.save(new Member(signupRequestDto,
+                                        passwordEncoder.encode(signupRequestDto.getPassword()),
+                                        signupRequestDto.getMemberRole().equals("ADMIN") ? MemberRoleEnum.ADMIN : MemberRoleEnum.USER))
                                 .onErrorResume(exception -> {
                                     return Mono.error(new RuntimeException("회원 정보 저장 중 오류 발생!"));
                                 })
@@ -47,25 +47,31 @@ public class MemberService {
     public Mono<ResponseEntity<String>> login(LoginRequestDto loginRequestDto) {
         return memberRepository.findByUserId(loginRequestDto.getUserId())
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("존재하지 않는 사용자입니다.")))
-                .flatMap(member -> {
-                    if (passwordEncoder.matches(loginRequestDto.getPassword(), member.getPassword())) {
-                        TokenDto tokenDto = jwtUtil.createAllToken(member.getUserId());
+                .filter(member -> passwordEncoder.matches(loginRequestDto.getPassword(), member.getPassword()))
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("비밀번호가 틀렸습니다.")))
+                .map(member -> jwtUtil.createAllToken(member.getUserId()))
+                .flatMap(tokenDto -> {
+                    return refreshTokenRepository.findByUserId(loginRequestDto.getUserId())
+                            .switchIfEmpty(refreshTokenRepository.save(new RefreshToken(tokenDto.getRefreshToken(), loginRequestDto.getUserId()))
+                                    .onErrorResume(exception -> {
+                                        return Mono.error(new RuntimeException("Refresh Token 저장 중 오류 발생!"));
+                                    }))
+                            .flatMap(refreshToken -> {
+                                if (refreshToken.getRefreshToken().equals(tokenDto.getRefreshToken()))
+                                    return Mono.just(refreshToken);
+                                else
+                                    return refreshTokenRepository.save(refreshToken.updateToken(tokenDto.getRefreshToken()))
+                                            .onErrorResume(exception -> {
+                                                return Mono.error(new RuntimeException("Refresh Token 저장 중 오류 발생!"));
+                                            });
+                            })
+                            .map(refreshToken -> {
+                                HttpHeaders header = new HttpHeaders();
 
-                        return refreshTokenRepository.findByUserId(member.getUserId())
-                                .switchIfEmpty(refreshTokenRepository.save(new RefreshToken(tokenDto.getRefreshToken(), member)))
-                                .flatMap(refreshToken -> refreshTokenRepository.save(refreshToken.updateToken(tokenDto.getRefreshToken())))
-                                .onErrorResume(exception -> {
-                                    return Mono.error(new RuntimeException("Refresh Token 저장 중 오류 발생!"));
-                                })
-                                .map(refreshToken -> {
-                                    HttpHeaders header = new HttpHeaders();
-
-                                    header.add(JwtUtil.ACCESS_TOKEN, tokenDto.getAccessToken());
-                                    header.add(JwtUtil.REFRESH_TOKEN, tokenDto.getRefreshToken());
-                                    return ResponseEntity.ok().headers(header).body("로그인 성공 o(〃＾▽＾〃)o");
-                                });
-                    } else
-                        return Mono.error(new IllegalArgumentException("비밀번호가 틀렸습니다."));
+                                header.add(JwtUtil.ACCESS_TOKEN, tokenDto.getAccessToken());
+                                header.add(JwtUtil.REFRESH_TOKEN, tokenDto.getRefreshToken());
+                                return ResponseEntity.ok().headers(header).body("로그인 성공 o(〃＾▽＾〃)o");
+                            });
                 });
     }
 }
