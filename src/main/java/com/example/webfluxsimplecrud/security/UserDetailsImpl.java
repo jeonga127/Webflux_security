@@ -1,21 +1,20 @@
 package com.example.webfluxsimplecrud.security;
 
 import com.example.webfluxsimplecrud.domain.Member;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 public class UserDetailsImpl implements UserDetails {
 
     private final Member member;
     private final String userId;
 
-    public UserDetailsImpl(Member member, String userId){
+    public UserDetailsImpl(Member member, String userId) {
         this.member = member;
         this.userId = userId;
     }
@@ -26,7 +25,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return new ArrayList<>(Arrays.asList(new SimpleGrantedAuthority("USER")));
+        return new ArrayList<>(List.of(new SimpleGrantedAuthority(this.getMember().getRole().getAuthority())));
     }
 
     @Override

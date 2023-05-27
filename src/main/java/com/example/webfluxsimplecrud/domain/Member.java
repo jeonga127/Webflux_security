@@ -8,16 +8,15 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Table("member")
 @NoArgsConstructor
-public class Member implements UserDetails {
+public class Member{
     @Id
     private Long id;
     private String userId;
@@ -27,43 +26,13 @@ public class Member implements UserDetails {
 
     private String nickname;
     private String streamKey;
-    private MemberRole role;
+    private MemberRoleEnum role;
 
-    public Member(SignupRequestDto signupRequestDto, String password, MemberRole role) {
+    public Member(SignupRequestDto signupRequestDto, String password, MemberRoleEnum role) {
         this.userId = signupRequestDto.getUserId();
         this.password = password;
         this.nickname = signupRequestDto.getNickname();
         this.streamKey = signupRequestDto.getStreamKey();
         this.role = role;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return new ArrayList<>(Arrays.asList(new SimpleGrantedAuthority(this.getRole().toString())));
-    }
-
-    @Override
-    public String getUsername() {
-        return this.getUserId();
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return false;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return false;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return false;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return false;
     }
 }
