@@ -1,6 +1,5 @@
 package com.example.webfluxsimplecrud.jwt;
 
-import com.example.webfluxsimplecrud.domain.RefreshToken;
 import com.example.webfluxsimplecrud.dto.TokenDto;
 import com.example.webfluxsimplecrud.repository.RefreshTokenRepository;
 import io.jsonwebtoken.*;
@@ -26,8 +25,8 @@ public class JwtUtil {
     public static final String REFRESH_TOKEN = "Refresh_Token";
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private static final Date ACCESS_TIME = Date.from(Instant.now().plus(1, ChronoUnit.MINUTES));
-    public static final Date REFRESH_TIME = Date.from(Instant.now().plus(3, ChronoUnit.MINUTES));
+    private static final Date ACCESS_TIME = Date.from(Instant.now().plus(1, ChronoUnit.HOURS));
+    public static final Date REFRESH_TIME = Date.from(Instant.now().plus(14, ChronoUnit.DAYS));
     private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
     private final RefreshTokenRepository refreshTokenRepository;
 
@@ -76,8 +75,6 @@ public class JwtUtil {
     }
 
     public Mono<Boolean> refreshTokenValidation(String token) {
-        // 토큰 검증
-
         return validateToken(token)
                 .flatMap((valid) -> {
                     if (!valid)

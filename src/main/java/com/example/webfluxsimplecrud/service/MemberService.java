@@ -34,8 +34,7 @@ public class MemberService {
                     if (exists)
                         return Mono.error(new IllegalArgumentException("중복된 아이디입니다."));
                     else {
-                        MemberRoleEnum role = signupRequestDto.getMemberRole().equals("ADMIN") ? MemberRoleEnum.ADMIN : MemberRoleEnum.USER
-                                ;
+                        MemberRoleEnum role = signupRequestDto.getMemberRole().equals("ADMIN") ? MemberRoleEnum.ADMIN : MemberRoleEnum.USER;
                         String password = passwordEncoder.encode(signupRequestDto.getPassword());
                         return memberRepository.save(new Member(signupRequestDto, password, role))
                                 .onErrorResume(exception -> {

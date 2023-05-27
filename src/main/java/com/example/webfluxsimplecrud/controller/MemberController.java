@@ -6,10 +6,8 @@ import com.example.webfluxsimplecrud.dto.SignupRequestDto;
 import com.example.webfluxsimplecrud.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -27,5 +25,10 @@ public class MemberController {
     @PostMapping("/login")
     public Mono<ResponseEntity<String>> login(@RequestBody LoginRequestDto loginRequestDto) {
         return memberService.login(loginRequestDto);
+    }
+
+    @GetMapping("/logout")
+    public Mono<ResponseEntity<String>> logout(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return memberService.logout(userDetails.getUserId());
     }
 }

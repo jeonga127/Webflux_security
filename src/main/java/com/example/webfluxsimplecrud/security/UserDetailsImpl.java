@@ -28,6 +28,10 @@ public class UserDetailsImpl implements UserDetails {
         return new ArrayList<>(List.of(new SimpleGrantedAuthority(this.getMember().getRole().getAuthority())));
     }
 
+    public String getUserId() {
+        return this.userId;
+    }
+
     @Override
     public String getPassword() {
         return null;

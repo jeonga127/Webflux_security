@@ -38,7 +38,7 @@ public class WebfluxSecurityConfiguration {
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/members/**", "/any").permitAll()
+                        .pathMatchers("/members/signup", "/members/login", "/any").permitAll()
                         .anyExchange().authenticated())
                 .authenticationManager(authenticationManager)
                 .securityContextRepository(securityContextRepository);
