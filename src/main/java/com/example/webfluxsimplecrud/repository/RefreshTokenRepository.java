@@ -15,7 +15,6 @@ public class RefreshTokenRepository {
     private final ReactiveRedisTemplate<String, RefreshToken> reactiveRedisTemplate;
 
     public Mono<RefreshToken> findByUserId(String userId) {
-
         return reactiveRedisTemplate.opsForValue().get(userId);
     }
 
