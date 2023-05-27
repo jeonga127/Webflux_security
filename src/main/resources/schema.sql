@@ -7,10 +7,3 @@ CREATE TABLE member
     stream_key VARCHAR(255) NOT NULL,
     role       VARCHAR(255) NOT NULL
 );
-
-CREATE TABLE refreshtoken
-(
-    id            SERIAL PRIMARY KEY,
-    refresh_token VARCHAR(255) NOT NULL,
-    user_id       VARCHAR(255) NOT NULL
-);
