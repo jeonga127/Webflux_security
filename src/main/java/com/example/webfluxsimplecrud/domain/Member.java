@@ -6,12 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 @Getter
 @Table("member")
@@ -23,7 +17,6 @@ public class Member{
 
     @JsonIgnore
     private String password;
-
     private String nickname;
     private String streamKey;
     private MemberRoleEnum role;
